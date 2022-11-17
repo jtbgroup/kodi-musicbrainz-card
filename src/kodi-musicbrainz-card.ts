@@ -200,22 +200,51 @@ export class KodiMusicBrainzCard extends LitElement {
         console.log(primaryTypes);
 
         console.log(a);
-        return html`<div>
+        return html`<div class="mb_results">
             ${primaryTypes.map(
-                item => html`<div class="mb_rg_type">type: ${item}</div>
-                    <div class="mb_results">
+                item => html` <div class="mb_rg_container">
+                    <div class="mb_rg_type">type: ${item}</div>
+                    <div class="mb_rg_type_container">
                         ${this._filterTypes(a, item).map(
-                            res => html` <div class="mb_rg_grid">
-                                <div class="mb_rg_title">${res["title"]}</div>
-                                <div class="mb_rg_release">
+                            res => html` <div class="mb_rg_grid_detail">
+
+                            <div class="mb_rg_detail_title">${res["title"]}</div>
+                            <ha-icon icon="mdi:calendar" class="mb_rg_detail_release_icon"></ha-icon>
+                            <div class="mb_rg_detail_release">
                                     ${res["first-release-date"] ? html` ${res["first-release-date"]}` : ``}
                                 </div>
-                                <div class="mb_rg_types">[${res["primary-type"]} // ${res["secondary-types"]}]</div>
-                            </div>`,
+                            <div class="mb_rg_detail_types">
+                                    ${res["secondary-types"]}
+                                </div>
+                            <img id="cover_${res["id"]}" src="" class="mb_rg_detail_cover">${this.getCover(res)}
+                            </div></diV>`,
                         )}
-                    </div>`,
+                    </div>
+                </div>`,
             )}
         </div>`;
+    }
+
+    private getCover(item) {
+        if (item["releases"][0]) {
+            const releaseId = item["releases"][0]["id"];
+
+            let url = "https://coverartarchive.org/release/" + releaseId;
+            url = encodeURI(url);
+            console.log(url);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const urlImg = data.images[0].thumbnails.small;
+                    console.log(urlImg);
+                    const tagId = "#cover_" + item.id;
+
+                    const playlist = this.shadowRoot?.querySelector(tagId) as HTMLElement;
+                    playlist.setAttribute("src", urlImg);
+                    // document.getElementById(tagId)?.setAttribute("src", urlImg);
+                });
+        }
     }
 
     private _filterTypes(json, value) {
@@ -270,6 +299,7 @@ export class KodiMusicBrainzCard extends LitElement {
             "http://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" + artistId;
         const urlAlbums =
             "http://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:album AND arid:" + artistId;
+        console.log(encodeURI(urlAlbums));
 
         Promise.all([fetch(encodeURI(urlSingles)), fetch(encodeURI(urlAlbums))])
             .then(function (responses) {
@@ -312,7 +342,7 @@ export class KodiMusicBrainzCard extends LitElement {
                 display: grid;
                 grid-template-columns: auto;
                 grid-template-rows: auto;
-                row-gap: 10px;
+                row-gap: 20px;
             }
 
             .mb_artist_grid {
@@ -346,23 +376,50 @@ export class KodiMusicBrainzCard extends LitElement {
                 text-align: right;
             }
 
-            .mb_rg_grid {
+            .mb_rg_container {
                 display: grid;
-                grid-template-columns: 1fr auto;
+                grid-template-columns: auto;
+                grid-template-rows: auto;
+                row-gap: 10px;
+            }
+
+            .mb_rg_type_container {
+                display: grid;
+                grid-template-columns: auto;
+                grid-template-rows: auto;
+                row-gap: 5px;
+            }
+
+            .mb_rg_grid_detail {
+                display: grid;
+                grid-template-columns: auto auto 1fr auto;
                 grid-template-rows: auto;
             }
-            .mb_rg_title {
-                grid-column: 1;
+            .mb_rg_detail_title {
+                grid-column: 1 / 3;
                 grid-row: 1;
                 font-weight: bold;
             }
-            .mb_rg_releasedate {
-                grid-column: 2;
-                grid-row: 1;
+            .mb_rg_detail_release_icon {
+                grid-column: 1;
+                grid-row: 2;
             }
-            .mb_rg_types {
+            .mb_rg_detail_release {
                 grid-column: 2;
                 grid-row: 2;
+            }
+            .mb_rg_detail_types {
+                grid-column: 3;
+                grid-row: 2;
+                text-align: right;
+                font-style: italic;
+            }
+            .mb_rg_detail_cover {
+                grid-column: 4;
+                grid-row: 1 / 3;
+                border: 1px solid red;
+                width: 50px;
+                height: 50px;
             }
         `;
     }
