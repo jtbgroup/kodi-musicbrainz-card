@@ -11,5 +11,6 @@ declare global {
 export interface KodiMusicBrainzCardConfig extends LovelaceCardConfig {
     entity: string;
     title?: string;
+    show_version: boolean;
 }
 

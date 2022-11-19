@@ -33,38 +33,6 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
         return this._config?.entity || "";
     }
 
-    get _show_thumbnail(): boolean {
-        return this._config?.show_thumbnail || false;
-    }
-
-    get _show_thumbnail_border(): boolean {
-        return this._config?.show_thumbnail_border || false;
-    }
-
-    get _show_thumbnail_overlay(): boolean {
-        return this._config?.show_thumbnail_overlay || false;
-    }
-
-    get _show_line_separator(): boolean {
-        return this._config?.show_line_separator || false;
-    }
-
-    get _hide_last_line_separator(): boolean {
-        return this._config?.hide_last_line_separator || false;
-    }
-
-    get _outline_color(): string {
-        return this._config?.outline_color || "";
-    }
-
-    get _items_container_scrollable(): boolean {
-        return this._config?.items_container_scrollable || false;
-    }
-
-    get _items_container_height(): string {
-        return this._config?.items_container_height || "";
-    }
-
     get _show_version(): boolean {
         return this._config?.show_version || false;
     }
@@ -101,74 +69,6 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
                             return html`<mwc-list-item .value=${entity}>${entity}</mwc-list-item>`;
                         })}
                     </ha-select>
-                </div>
-
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Show Thumbnail">
-                        <ha-switch
-                            .checked=${this._show_thumbnail !== false}
-                            .configValue=${"show_thumbnail"}
-                            @change=${this._valueChanged}>
-                        </ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Show thumbnail overlay">
-                        <ha-switch
-                            .checked=${this._show_thumbnail_overlay !== false}
-                            .configValue=${"show_thumbnail_overlay"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Show Line separator">
-                        <ha-switch
-                            .checked=${this._show_line_separator !== false}
-                            .configValue=${"show_line_separator"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Hide Last Line separator">
-                        <ha-switch
-                            .checked=${this._hide_last_line_separator !== false}
-                            .configValue=${"hide_last_line_separator"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Show thumbnail border">
-                        <ha-switch
-                            .checked=${this._show_thumbnail_border !== false}
-                            .configValue=${"show_thumbnail_border"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-
-                <div class="config">
-                    <ha-textfield
-                        label="Outline Color (Optional)"
-                        .value=${this._outline_color}
-                        .configValue=${"outline_color"}
-                        @input=${this._valueChanged}></ha-textfield>
-                </div>
-
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Make Playlist scrollable">
-                        <ha-switch
-                            .checked=${this._items_container_scrollable !== false}
-                            .configValue=${"items_container_scrollable"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-
-                <div class="config">
-                    <ha-textfield
-                        label="Height of the card (used when playlist is made scrollable)"
-                        .value=${this._items_container_height}
-                        .configValue=${"items_container_height"}
-                        @input=${this._valueChanged}></ha-textfield>
                 </div>
 
                 <div class="config">

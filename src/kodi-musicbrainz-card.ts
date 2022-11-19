@@ -38,21 +38,11 @@ export class KodiMusicBrainzCard extends LitElement {
         };
     }
 
-    private ICON_CURRENT_PLAYING = "mdi:arrow-left-bold";
     private _entityState;
     private _json_meta;
-    private _json_data;
-    private _service_domain;
-    private _currently_playing;
-    private _currently_playing_file;
-    private sortable;
+    private _card;
     private _searchInput;
-    @state()
-    private _resultArtists;
-    @state()
-    private _resultReleaseGroups;
-    @state()
-    private _resultObject = 0;
+    private firstRun = true;
 
     // TODO Add any properities that should cause your element to re-render here
     // https://lit.dev/docs/components/properties/
@@ -114,24 +104,26 @@ export class KodiMusicBrainzCard extends LitElement {
                         console.error("empty metadata attribute");
                         return;
                     }
-                    this._service_domain = this._json_meta[0]["service_domain"];
-                    this._currently_playing = this._json_meta[0]["currently_playing"];
-                    this._currently_playing_file = this._json_meta[0]["currently_playing_file"];
+                    // this._service_domain = this._json_meta[0]["service_domain"];
+                    // this._currently_playing = this._json_meta[0]["currently_playing"];
+                    // this._currently_playing_file = this._json_meta[0]["currently_playing_file"];
                     const data = this._entityState.attributes.data;
-                    this._json_data = typeof data == "object" ? data : JSON.parse(data);
+                    // this._json_data = typeof data == "object" ? data : JSON.parse(data);
                 }
             }
         }
 
-        const card = html`
-            <ha-card
-                .header=${this.config.title ? this.config.title : ""}
-                tabindex="0"
-                .label=${`Kodi MusicBrainz ${this.config.entity || "No Entity Defined"}`}>
-                <div class="card-container">${errorMessage ? errorMessage : this._buildCardContainer()}</div>
-            </ha-card>
-        `;
-        return card;
+        if (this.firstRun) {
+            this._card = html`
+                <ha-card
+                    .header=${this.config.title ? this.config.title : ""}
+                    tabindex="0"
+                    .label=${`Kodi MusicBrainz ${this.config.entity || "No Entity Defined"}`}>
+                    <div class="card-container">${errorMessage ? errorMessage : this._buildCardContainer()}</div>
+                </ha-card>
+            `;
+        }
+        return this._card;
     }
 
     private _buildCardContainer() {
@@ -146,50 +138,25 @@ export class KodiMusicBrainzCard extends LitElement {
         });
 
         return html`
-            ${this.config.show_version ? html`<div>${CARD_VERSION}</div>` : ""}
-            <div>MusisBrainz Card search</div>
-            <div>
-                ${this._searchInput}
-                <mwc-button class="form-button" label="Search" raised @click="${this._searchArtists}" }></mwc-button>
-            </div>
-            <div id="result-musicbrainz">
-                <div>RESULT</div>
-                ${this._buildResult()}
+            <div class="mb_content_container">
+                ${this.config.show_version ? html`<div>${CARD_VERSION}</div>` : ""}
+                <div>
+                    ${this._searchInput}
+                    <mwc-button
+                        class="form-button"
+                        label="Search"
+                        raised
+                        @click="${this._searchArtists}"
+                        }></mwc-button>
+                    <mwc-button class="form-button" label="Clear" raised @click="${this._clearResult}" }></mwc-button>
+                </div>
+                <div id="result-musicbrainz"></div>
             </div>
         `;
     }
 
-    private _buildResult() {
-        // console.log(this._resultObject);
-        console.log(this._resultReleaseGroups);
-
-        if (this._resultObject == RESULT_ARTISTS && this._resultArtists && this._resultArtists.length > 0) {
-            return this._createArtistsResult();
-        } else if (
-            this._resultObject == RESULT_RELEASEGROUPS &&
-            this._resultReleaseGroups &&
-            this._resultReleaseGroups.length > 0
-        ) {
-            return this._createReleaseGroupsResult();
-        }
-        return html`<div><i>No Result</i></div>`;
-    }
-
-    private _createSearchReleaseGroupsButton(artistId) {
-        const playDiv = document.createElement("ha-icon");
-        playDiv.setAttribute("icon", "mdi:disc");
-        // playDiv.setAttribute("class", clickActionClass);
-
-        playDiv.addEventListener("click", () => this.searchReleaseGroups(artistId));
-
-        return html`${playDiv}`;
-    }
-
-    private _createReleaseGroupsResult() {
-        console.log("RG");
-        // console.log(this._resultReleaseGroups);
-
-        const a = this._resultReleaseGroups.sort(function (a, b) {
+    private _createReleaseGroups(releaseGroups) {
+        const a = releaseGroups.sort(function (a, b) {
             const type = a["primary-type"].localeCompare(b["primary-type"]);
             if (type != 0) return type;
             if (!a["first-release-date"] || !b["first-release-date"]) return type;
@@ -197,32 +164,69 @@ export class KodiMusicBrainzCard extends LitElement {
         });
 
         const primaryTypes = [...new Set(a.map(data => data["primary-type"]))];
-        console.log(primaryTypes);
 
-        console.log(a);
-        return html`<div class="mb_results">
-            ${primaryTypes.map(
-                item => html` <div class="mb_rg_container">
-                    <div class="mb_rg_type">type: ${item}</div>
-                    <div class="mb_rg_type_container">
-                        ${this._filterTypes(a, item).map(
-                            res => html` <div class="mb_rg_grid_detail">
+        const resultDiv = document.createElement("div");
+        resultDiv.id = "result";
+        resultDiv.className = "mb_results";
 
-                            <div class="mb_rg_detail_title">${res["title"]}</div>
-                            <ha-icon icon="mdi:calendar" class="mb_rg_detail_release_icon"></ha-icon>
-                            <div class="mb_rg_detail_release">
-                                    ${res["first-release-date"] ? html` ${res["first-release-date"]}` : ``}
-                                </div>
-                            <div class="mb_rg_detail_types">
-                                    ${res["secondary-types"]}
-                                </div>
-                            <img id="cover_${res["id"]}" src="" class="mb_rg_detail_cover">${this.getCover(res)}
-                            </div></diV>`,
-                        )}
-                    </div>
-                </div>`,
-            )}
-        </div>`;
+        primaryTypes.map(item => {
+            const itemS = item as string;
+
+            const primaryTypeDiv = document.createElement("div");
+            primaryTypeDiv.className = "mb_rg_type";
+            primaryTypeDiv.innerHTML = itemS;
+
+            const containerDiv = document.createElement("div");
+            containerDiv.className = "mb_rg_type_container";
+
+            const primaryTypesDiv = document.createElement("div");
+            primaryTypesDiv.className = "mb_rg_container";
+            primaryTypesDiv.append(primaryTypeDiv);
+            primaryTypesDiv.append(containerDiv);
+
+            resultDiv.append(primaryTypesDiv);
+
+            this._filterTypes(a, item).map(res => {
+                const titleDiv = document.createElement("div");
+                titleDiv.className = "mb_rg_detail_title";
+                titleDiv.innerHTML = res["title"];
+
+                const releaseIcon = document.createElement("ha-icon");
+                releaseIcon.setAttribute("icon", "mdi:calendar");
+                const releaseDiv = document.createElement("div");
+                releaseDiv.className = "mb_rg_detail_release";
+                releaseDiv.append(releaseIcon);
+                releaseDiv.innerHTML = res["first-release-date"] ? res["first-release-date"] : "";
+
+                const detailTypesIcon = document.createElement("ha-icon");
+                detailTypesIcon.setAttribute("icon", "mdi:shape-outline");
+                const detailTypesDiv = document.createElement("div");
+                detailTypesDiv.className = "mb_rg_detail_types";
+                detailTypesDiv.append(detailTypesIcon);
+                detailTypesDiv.innerHTML = res["secondary-types"] ? res["secondary-types"] : "";
+
+                const imgCoverIcon = document.createElement("ha-icon");
+                imgCoverIcon.id = "covericon_" + res["id"];
+                imgCoverIcon.setAttribute("icon", "mdi:disc");
+                const coverDiv = document.createElement("div");
+                coverDiv.id = "coverdiv_" + res["id"];
+                coverDiv.className = "mb_rg_detail_cover";
+                coverDiv.append(imgCoverIcon);
+
+                this.getCover(res);
+
+                const detailGrid = document.createElement("div");
+                detailGrid.className = "mb_rg_grid_detail";
+                detailGrid.append(titleDiv);
+                detailGrid.append(releaseDiv);
+                detailGrid.append(detailTypesDiv);
+                detailGrid.append(coverDiv);
+
+                containerDiv.append(detailGrid);
+            });
+        });
+
+        return resultDiv;
     }
 
     private getCover(item) {
@@ -237,12 +241,21 @@ export class KodiMusicBrainzCard extends LitElement {
                 .then(response => response.json())
                 .then(data => {
                     const urlImg = data.images[0].thumbnails.small;
-                    console.log(urlImg);
-                    const tagId = "#cover_" + item.id;
 
-                    const playlist = this.shadowRoot?.querySelector(tagId) as HTMLElement;
-                    playlist.setAttribute("src", urlImg);
-                    // document.getElementById(tagId)?.setAttribute("src", urlImg);
+                    const coverDivId = "#coverdiv_" + item.id;
+                    const coverIconId = "#covericon_" + item.id;
+                    const divCover = this.shadowRoot?.querySelector(coverDivId) as HTMLElement;
+                    const coverIcon = this.shadowRoot?.querySelector(coverIconId) as HTMLElement;
+                    if (coverIcon) {
+                        divCover.removeChild(coverIcon);
+                    }
+
+                    const imgCover = document.createElement("img");
+                    imgCover.setAttribute("src", urlImg);
+                    imgCover.className = "mb_rg_detail_cover_img";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
                 });
         }
     }
@@ -255,31 +268,49 @@ export class KodiMusicBrainzCard extends LitElement {
         return result;
     }
 
-    private _createArtistsResult() {
-        // console.log("AR");
-        // console.log(this._resultArtists);
+    private _createArtistsResult(artists) {
+        const artistsDiv = document.createElement("div");
+        artistsDiv.id = "result";
+        artistsDiv.className = "mb_results";
 
-        return html`<div class="mb_results">
-            ${this._resultArtists.map(
-                item => html`<div class="mb_artist_grid">
-                    <div class="mb_artist_btn">${this._createSearchReleaseGroupsButton(item["id"])}</div>
-                    <div class="mb_artist_name">
-                        ${item["name"]} ${item["country"] ? html` (${item["country"]})` : ``}
-                    </div>
+        artists.map(item => {
+            const artistBtn = document.createElement("div");
+            artistBtn.className = "mb_artist_btn";
 
-                    <div class="mb_artist_activity">
-                        ${item["life-span"]["begin"] ? html`${item["life-span"]["begin"]}` : ``}
-                        ${item["life-span"]["end"] ? html` - ${item["life-span"]["end"]}` : ``}
-                    </div>
+            const btn = document.createElement("ha-icon");
+            btn.setAttribute("icon", "mdi:disc");
+            btn.addEventListener("click", () => this.searchReleaseGroups(item["id"]));
+            artistBtn.append(btn);
 
-                    <div class="mb_artist_info">${item["disambiguation"]}</div>
-                </div>`,
-            )}
-        </div>`;
+            const nameDiv = document.createElement("div");
+            nameDiv.className = "mb_artist_name";
+            const name = item.name + " " + (item["country"] ? "(" + item["country"] + ")" : "");
+            nameDiv.innerHTML = name;
+
+            const activityDiv = document.createElement("div");
+            activityDiv.className = "mb_artist_activity";
+            const lifespan = item["life-span"]["begin"] ? item["life-span"]["begin"] : "";
+            item["life-span"]["end"] ? lifespan + " >>> " + item["life-span"]["end"] : "";
+            activityDiv.innerHTML = lifespan;
+
+            const infoDiv = document.createElement("div");
+            infoDiv.className = "mb_artist_info";
+            infoDiv.innerHTML = item["disambiguation"] ? item["disambiguation"] : "";
+
+            const artistGrid = document.createElement("div");
+            artistGrid.className = "mb_artist_grid";
+            artistGrid.append(artistBtn);
+            artistGrid.append(nameDiv);
+            artistGrid.append(activityDiv);
+            artistGrid.append(infoDiv);
+
+            artistsDiv.append(artistGrid);
+        });
+
+        return artistsDiv;
     }
     private _searchArtists() {
         const searchText = this._searchInput.value;
-        // this._searchInput.value = "";
 
         let url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=artist:" + searchText;
         url = encodeURI(url);
@@ -288,13 +319,33 @@ export class KodiMusicBrainzCard extends LitElement {
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                this._resultObject = RESULT_ARTISTS;
-                this._resultArtists = data.artists;
+                this.fillArtists(data.artists);
             });
     }
 
+    private getResultElement() {
+        return this.shadowRoot?.querySelector("#result-musicbrainz") as HTMLElement;
+    }
+
+    private _clearResult() {
+        const divMB = this.getResultElement();
+        const divresult = this.shadowRoot?.querySelector("#result") as HTMLElement;
+        if (divresult) {
+            divMB.removeChild(divresult);
+        }
+    }
+
+    private fillArtists(artists) {
+        this._clearResult();
+        this.getResultElement().append(this._createArtistsResult(artists));
+    }
+
+    private fillResultGroups(resultGroups) {
+        this._clearResult();
+        this.getResultElement().append(this._createReleaseGroups(resultGroups));
+    }
+
     private searchReleaseGroups(artistId) {
-        this._resultReleaseGroups = [];
         const urlSingles =
             "http://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" + artistId;
         const urlAlbums =
@@ -318,8 +369,7 @@ export class KodiMusicBrainzCard extends LitElement {
                     tmp = tmp.concat(element["release-groups"]);
                 });
 
-                this._resultObject = RESULT_RELEASEGROUPS;
-                this._resultReleaseGroups = tmp;
+                this.fillResultGroups(tmp);
             })
             .catch(function (error) {
                 // if there's an error, log it
@@ -336,6 +386,14 @@ export class KodiMusicBrainzCard extends LitElement {
 
             :host {
                 --mdc-select-fill-color: rgba(0, 0, 0, 0);
+            }
+
+            .mb_content_container {
+                display: grid;
+                grid-template-columns: auto;
+                grid-template-rows: auto;
+                row-gap: 20px;
+                margin: 10px;
             }
 
             .mb_results {
@@ -374,6 +432,7 @@ export class KodiMusicBrainzCard extends LitElement {
             .mb_rg_type {
                 font-weight: bold;
                 text-align: right;
+                font-size: 20px;
             }
 
             .mb_rg_container {
@@ -387,39 +446,44 @@ export class KodiMusicBrainzCard extends LitElement {
                 display: grid;
                 grid-template-columns: auto;
                 grid-template-rows: auto;
-                row-gap: 5px;
+                row-gap: 10px;
             }
 
             .mb_rg_grid_detail {
                 display: grid;
-                grid-template-columns: auto auto 1fr auto;
+                gap: 3px;
+                grid-template-columns: auto 1fr auto;
                 grid-template-rows: auto;
             }
             .mb_rg_detail_title {
-                grid-column: 1 / 3;
+                grid-column: 2 / 4;
                 grid-row: 1;
                 font-weight: bold;
             }
-            .mb_rg_detail_release_icon {
-                grid-column: 1;
-                grid-row: 2;
-            }
+
             .mb_rg_detail_release {
+                grid-column: 3;
+                grid-row: 1;
+                text-align: right;
+            }
+
+            .mb_rg_detail_types {
                 grid-column: 2;
                 grid-row: 2;
-            }
-            .mb_rg_detail_types {
-                grid-column: 3;
-                grid-row: 2;
-                text-align: right;
                 font-style: italic;
             }
             .mb_rg_detail_cover {
-                grid-column: 4;
-                grid-row: 1 / 3;
-                border: 1px solid red;
-                width: 50px;
-                height: 50px;
+                grid-column: 1;
+                grid-row: 1 / 4;
+                border: 1px solid white;
+                background-color: grey;
+                width: 70px;
+                height: 70px;
+            }
+
+            .mb_rg_detail_cover_img {
+                width: 70px;
+                height: 70px;
             }
         `;
     }
