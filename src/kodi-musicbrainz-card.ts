@@ -40,6 +40,7 @@ export class KodiMusicBrainzCard extends LitElement {
 
     private _entityState;
     private _json_meta;
+    private _entity;
     private _card;
     private _searchInput;
     private firstRun = true;
@@ -80,38 +81,6 @@ export class KodiMusicBrainzCard extends LitElement {
     protected render(): TemplateResult | void {
         // console.log("in render");
         let errorMessage;
-        const entity = this.config.entity;
-        if (!entity) {
-            errorMessage = "No Entity defined";
-            console.error(errorMessage);
-        } else {
-            this._entityState = this.hass.states[entity];
-            if (!this._entityState) {
-                errorMessage = "No State for the sensor";
-                console.error(errorMessage);
-            } else {
-                if (this._entityState.state == "off") {
-                    errorMessage = "Kodi is off";
-                    console.error(errorMessage);
-                } else {
-                    const meta = this._entityState.attributes.meta;
-                    if (!meta) {
-                        console.error("no metadata for the sensor");
-                        return;
-                    }
-                    this._json_meta = typeof meta == "object" ? meta : JSON.parse(meta);
-                    if (this._json_meta.length == 0) {
-                        console.error("empty metadata attribute");
-                        return;
-                    }
-                    // this._service_domain = this._json_meta[0]["service_domain"];
-                    // this._currently_playing = this._json_meta[0]["currently_playing"];
-                    // this._currently_playing_file = this._json_meta[0]["currently_playing_file"];
-                    const data = this._entityState.attributes.data;
-                    // this._json_data = typeof data == "object" ? data : JSON.parse(data);
-                }
-            }
-        }
 
         if (this.firstRun) {
             this._card = html`
@@ -123,7 +92,26 @@ export class KodiMusicBrainzCard extends LitElement {
                 </ha-card>
             `;
         }
+
+        this.fillEntityArtist();
+
         return this._card;
+    }
+
+    private fillEntityArtist() {
+        const entity = this.config.entity;
+        if (entity) {
+            const entityState = this.hass.states[entity];
+            console.log(entityState);
+            if (entityState.attributes.media_artist) {
+            }
+
+            const artist = entityState.attributes.media_artist;
+            const artistEl = document.getElementById("entity_artist");
+            if (artistEl) {
+                artistEl.setAttribute("value", artist);
+            }
+        }
     }
 
     private _buildCardContainer() {
@@ -140,6 +128,7 @@ export class KodiMusicBrainzCard extends LitElement {
         return html`
             <div class="mb_content_container">
                 ${this.config.show_version ? html`<div>${CARD_VERSION}</div>` : ""}
+                ${this.config.entity ? this._createLinkEntity() : html``}
                 <div>
                     ${this._searchInput}
                     <mwc-button
@@ -153,6 +142,28 @@ export class KodiMusicBrainzCard extends LitElement {
                 <div id="result-musicbrainz"></div>
             </div>
         `;
+    }
+
+    private _createLinkEntity() {
+        const entity = this.config.entity;
+        let artist;
+        if (entity) {
+            const entityState = this.hass.states[entity];
+            artist = entityState.attributes.media_artist;
+        }
+
+        return html`<div class="mb_entity_control">
+            <span class="mb_entity_label"> </span>
+            <!-- <span id="entity_artist" }>${artist ? artist : html``} </span
+            > -->
+            <ha-textfield
+                id="entity_artist"
+                class="rounded"
+                disabled
+                label="Currently playing in entity"
+                value=${artist ? artist : html``}></ha-textfield>
+            <mwc-button class="form-button" label="search" raised @click="${this._searchWithEntity}" }></mwc-button>
+        </div>`;
     }
 
     private _createReleaseGroups(releaseGroups) {
@@ -253,6 +264,7 @@ export class KodiMusicBrainzCard extends LitElement {
                     const imgCover = document.createElement("img");
                     imgCover.setAttribute("src", urlImg);
                     imgCover.className = "mb_rg_detail_cover_img";
+                    divCover.append(imgCover);
                 })
                 .catch(error => {
                     console.error("Error:", error);
@@ -309,6 +321,15 @@ export class KodiMusicBrainzCard extends LitElement {
 
         return artistsDiv;
     }
+
+    private _searchWithEntity() {
+        const artistEl = this.shadowRoot?.querySelector("#entity_artist") as HTMLElement;
+        const t = artistEl.getAttribute("value");
+        console.log(t);
+        this._searchInput.value = t;
+        this._searchArtists();
+    }
+
     private _searchArtists() {
         const searchText = this._searchInput.value;
 
@@ -484,6 +505,18 @@ export class KodiMusicBrainzCard extends LitElement {
             .mb_rg_detail_cover_img {
                 width: 70px;
                 height: 70px;
+            }
+
+            .mb_entity_control {
+                display: grid;
+                gap: 5px;
+                grid-template-columns: 1fr auto auto;
+                grid-template-rows: auto;
+            }
+
+            .mb_entity_label {
+                text-align: right;
+                font-weight: bold;
             }
         `;
     }

@@ -9,7 +9,7 @@ declare global {
 
 // TODO Add your configuration elements here for type-checking
 export interface KodiMusicBrainzCardConfig extends LovelaceCardConfig {
-    entity: string;
+    entity?: string;
     title?: string;
     show_version: boolean;
 }
