@@ -333,7 +333,7 @@ export class KodiMusicBrainzCard extends LitElement {
     private _searchArtists() {
         const searchText = this._searchInput.value;
 
-        let url = "http://musicbrainz.org/ws/2/artist/?fmt=json&query=artist:" + searchText;
+        let url = "https://musicbrainz.org/ws/2/artist/?fmt=json&query=artist:" + searchText;
         url = encodeURI(url);
         console.log(url);
 
@@ -368,9 +368,9 @@ export class KodiMusicBrainzCard extends LitElement {
 
     private searchReleaseGroups(artistId) {
         const urlSingles =
-            "http://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" + artistId;
+            "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" + artistId;
         const urlAlbums =
-            "http://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:album AND arid:" + artistId;
+            "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:album AND arid:" + artistId;
         console.log(encodeURI(urlAlbums));
 
         Promise.all([fetch(encodeURI(urlSingles)), fetch(encodeURI(urlAlbums))])
