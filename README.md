@@ -10,16 +10,15 @@
 
 # Kodi-MusicBrainz-Card
 
-This card displays the playlist running on the kodi entity. The refresh is automatic based on events triggered by the entity.
+This card can be used to search into the MusicBrainz database for a specific artist. It can be used in combination with a media player entity to directly get the artist name currently playing.
 
 ## Requirements
 
-This card requires a specific sensor that gets the data from Kodi. The sensor is provided by the custom component [Kodi Media Sensors](https://github.com/jtbgroup/kodi-media-sensors). Keep this integration up to date to avoid strange behaviour of your card.
+No specific requirement. If you want to link the card with a player entity, the player must have an attribute called `media_artist` in the state of the entity. This is the case for the kodi integration.
 
 ## Features
 
-The card will let you track the playlist of kodi.
-You can perform some actions directly from the card like removing an item from the playlist or play a specific entry in the playlist.
+Search an artist in the MusicBrainz database
 
 ## Installation
 
