@@ -22,8 +22,7 @@ Search an artist in the MusicBrainz database
 
 ## Installation
 
-1. Install the custom component [Kodi Media Sensors](https://github.com/jtbgroup/kodi-media-sensors).
-2. Install the card using HACS
+1. Install the card using HACS
 
 Manual installation is of course possible, but not explained here as there are plenty of tutorials.
 
@@ -32,7 +31,7 @@ Manual installation is of course possible, but not explained here as there are p
 | Name | Type | Default | Since | Description |
 |------|------|---------|-------|-------------|
 | type | string | **required** | 1.0.0 | `custom:kodi-musicbrainz-card` |
-| entity | string | **required** | 1.0.0 |  `sensor.kodi_playlist` |
+| entity | string | **required** | 1.0.0 |  `media_player.kodi_example` |
 | title | string | optional | 1.0.0 | The title of the card |
 | show_version | boolean | false | 4.4 | Shows the version of the card directly on the card. This is mainly useful for develpment purposes. |
 
@@ -42,10 +41,5 @@ Example
 
 ``` yaml
     type: custom:kodi-playlist-card
-    entity: sensor.kodi_media_sensor_playlist
-    show_thumbnail: true
-    show_thumbnail_border: true
-    show_thumbnail_overlay: true
-    show_line_separator: true
-    outline_color: rgb(245,12,54)
+    entity: media_player.kodi_example
 ``
