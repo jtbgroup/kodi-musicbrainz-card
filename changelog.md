@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+- bug in the entity conponent
+- layout of the buttons
+
 ## 1.1.1
 
 - Switched to https calls

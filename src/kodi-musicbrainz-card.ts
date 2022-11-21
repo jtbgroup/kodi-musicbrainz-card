@@ -11,7 +11,6 @@ import "./editor";
 import type { KodiMusicBrainzCardConfig } from "./types";
 import { CARD_VERSION, DEFAULT_ENTITY_NAME, RESULT_ARTISTS, RESULT_RELEASEGROUPS } from "./const";
 
-/* eslint no-console: 0 */
 console.info(
     `%c  KODI-MUSICBRAINZ-CARD\n%c  ${localize("common.version")} ${CARD_VERSION}    `,
     "color: orange; font-weight: bold; background: black",
@@ -65,21 +64,11 @@ export class KodiMusicBrainzCard extends LitElement {
     }
 
     public getCardSize(): number {
-        return 20;
-    }
-
-    // https://lit.dev/docs/components/lifecycle/#reactive-update-cycle-performing
-    protected shouldUpdate(changedProps: PropertyValues): boolean {
-        if (!this.config) {
-            return false;
-        }
-
-        return hasConfigOrEntityChanged(this, changedProps, false);
+        return 1;
     }
 
     // https://lit.dev/docs/components/rendering/
     protected render(): TemplateResult | void {
-        // console.log("in render");
         let errorMessage;
 
         if (this.firstRun) {
@@ -93,24 +82,26 @@ export class KodiMusicBrainzCard extends LitElement {
             `;
         }
 
-        this.fillEntityArtist();
+        if (this.config.entity && !this.firstRun) {
+            this.fillEntityArtist(this.config.entity);
+        }
 
         return this._card;
     }
 
-    private fillEntityArtist() {
-        const entity = this.config.entity;
-        if (entity) {
-            const entityState = this.hass.states[entity];
-            console.log(entityState);
-            if (entityState.attributes.media_artist) {
-            }
-
-            const artist = entityState.attributes.media_artist;
-            const artistEl = document.getElementById("entity_artist");
-            if (artistEl) {
-                artistEl.setAttribute("value", artist);
-            }
+    private fillEntityArtist(entity) {
+        const entityState = this.hass.states[entity];
+        const artistEl = this.shadowRoot?.querySelector("#entity_artist") as HTMLElement;
+        const btnEl = document.getElementById("search_artist_btn");
+        if (entityState["attributes"]["media_artist"]) {
+            const artist = entityState["attributes"]["media_artist"];
+            artistEl.setAttribute("value", artist);
+            artistEl.setAttribute("label", "Currently playing in entity");
+            btnEl?.setAttribute("enabled", "");
+        } else {
+            artistEl.setAttribute("value", "");
+            artistEl.setAttribute("label", "No artist playing");
+            btnEl?.setAttribute("disabled", "");
         }
     }
 
@@ -129,15 +120,22 @@ export class KodiMusicBrainzCard extends LitElement {
             <div class="mb_content_container">
                 ${this.config.show_version ? html`<div>${CARD_VERSION}</div>` : ""}
                 ${this.config.entity ? this._createLinkEntity() : html``}
-                <div>
+                <div class="mb_form_grid">
                     ${this._searchInput}
-                    <mwc-button
-                        class="form-button"
-                        label="Search"
-                        raised
-                        @click="${this._searchArtists}"
-                        }></mwc-button>
-                    <mwc-button class="form-button" label="Clear" raised @click="${this._clearResult}" }></mwc-button>
+                    <div class="mb_button_grid">
+                        <mwc-button
+                            class="form-button"
+                            label="Search"
+                            raised
+                            @click="${this._searchArtists}"
+                            }></mwc-button>
+                        <mwc-button
+                            class="form-button"
+                            label="Clear"
+                            raised
+                            @click="${this._clearResult}"
+                            }></mwc-button>
+                    </div>
                 </div>
                 <div id="result-musicbrainz"></div>
             </div>
@@ -146,24 +144,34 @@ export class KodiMusicBrainzCard extends LitElement {
 
     private _createLinkEntity() {
         const entity = this.config.entity;
-        let artist;
+        let entityState;
+
+        const haTxt = document.createElement("ha-textfield");
+        haTxt.id = "entity_artist";
+        haTxt.className = "rounded";
+        haTxt.setAttribute("disabled", "");
+
+        const searchBtn = document.createElement("mwc-button");
+        searchBtn.id = "search_artist_btn";
+        searchBtn.className = "form-button";
+        searchBtn.setAttribute("raised", "");
+        searchBtn.setAttribute("Label", "search");
+        searchBtn.addEventListener("click", this._searchWithEntity);
+
         if (entity) {
-            const entityState = this.hass.states[entity];
-            artist = entityState.attributes.media_artist;
+            entityState = this.hass.states[entity];
+        }
+        if (entityState["attributes"]["media_artist"]) {
+            haTxt.setAttribute("Label", "Currently playing");
+            haTxt.setAttribute("value", entityState["attributes"]["media_artist"]);
+            searchBtn.setAttribute("enabled", "");
+        } else {
+            haTxt.setAttribute("Label", "No artist playing");
+            haTxt.setAttribute("value", "");
+            searchBtn.setAttribute("disabled", "");
         }
 
-        return html`<div class="mb_entity_control">
-            <span class="mb_entity_label"> </span>
-            <!-- <span id="entity_artist" }>${artist ? artist : html``} </span
-            > -->
-            <ha-textfield
-                id="entity_artist"
-                class="rounded"
-                disabled
-                label="Currently playing in entity"
-                value=${artist ? artist : html``}></ha-textfield>
-            <mwc-button class="form-button" label="search" raised @click="${this._searchWithEntity}" }></mwc-button>
-        </div>`;
+        return html`<div class="mb_entity_control">${haTxt}${searchBtn}</div>`;
     }
 
     private _createReleaseGroups(releaseGroups) {
@@ -246,7 +254,6 @@ export class KodiMusicBrainzCard extends LitElement {
 
             let url = "https://coverartarchive.org/release/" + releaseId;
             url = encodeURI(url);
-            console.log(url);
 
             fetch(url)
                 .then(response => response.json())
@@ -325,7 +332,6 @@ export class KodiMusicBrainzCard extends LitElement {
     private _searchWithEntity() {
         const artistEl = this.shadowRoot?.querySelector("#entity_artist") as HTMLElement;
         const t = artistEl.getAttribute("value");
-        console.log(t);
         this._searchInput.value = t;
         this._searchArtists();
     }
@@ -335,7 +341,6 @@ export class KodiMusicBrainzCard extends LitElement {
 
         let url = "https://musicbrainz.org/ws/2/artist/?fmt=json&query=artist:" + searchText;
         url = encodeURI(url);
-        console.log(url);
 
         fetch(url)
             .then(response => response.json())
@@ -371,7 +376,6 @@ export class KodiMusicBrainzCard extends LitElement {
             "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" + artistId;
         const urlAlbums =
             "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:album AND arid:" + artistId;
-        console.log(encodeURI(urlAlbums));
 
         Promise.all([fetch(encodeURI(urlSingles)), fetch(encodeURI(urlAlbums))])
             .then(function (responses) {
@@ -383,8 +387,6 @@ export class KodiMusicBrainzCard extends LitElement {
                 );
             })
             .then(data => {
-                // Log the data to the console
-                // You would do something with both sets of data here
                 let tmp = [];
                 data.forEach(element => {
                     tmp = tmp.concat(element["release-groups"]);
@@ -517,6 +519,19 @@ export class KodiMusicBrainzCard extends LitElement {
             .mb_entity_label {
                 text-align: right;
                 font-weight: bold;
+            }
+
+            .mb_button_grid {
+                display: grid;
+                grid-template-columns: auto;
+                grid-template-rows: auto;
+                gap: 5px;
+            }
+            .mb_form_grid {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto;
+                gap: 5px;
             }
         `;
     }
