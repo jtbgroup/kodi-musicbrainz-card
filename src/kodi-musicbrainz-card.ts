@@ -42,6 +42,7 @@ export class KodiMusicBrainzCard extends LitElement {
     private _entity;
     private _card;
     private _searchInput;
+    private _artS;
     private firstRun = true;
 
     // TODO Add any properities that should cause your element to re-render here
@@ -150,13 +151,17 @@ export class KodiMusicBrainzCard extends LitElement {
         haTxt.id = "entity_artist";
         haTxt.className = "rounded";
         haTxt.setAttribute("disabled", "");
+        this._artS = haTxt;
 
         const searchBtn = document.createElement("mwc-button");
         searchBtn.id = "search_artist_btn";
         searchBtn.className = "form-button";
         searchBtn.setAttribute("raised", "");
         searchBtn.setAttribute("Label", "search");
-        searchBtn.addEventListener("click", this._searchWithEntity);
+        searchBtn.addEventListener("click", event => {
+            console.debug(event.target);
+            this._searchWithEntity();
+        });
 
         if (entity) {
             entityState = this.hass.states[entity];
@@ -332,6 +337,7 @@ export class KodiMusicBrainzCard extends LitElement {
     private _searchWithEntity() {
         const artistEl = this.shadowRoot?.querySelector("#entity_artist") as HTMLElement;
         const t = artistEl.getAttribute("value");
+
         this._searchInput.value = t;
         this._searchArtists();
     }
