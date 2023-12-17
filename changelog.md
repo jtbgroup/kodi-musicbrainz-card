@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.3
+
+- bug in the layout
+- search text not emptied when entity changes
+
 ## 1.1.2
 
 - bug in the entity component

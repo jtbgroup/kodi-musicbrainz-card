@@ -1,4 +1,4 @@
-export const CARD_VERSION = "1.1.2";
+export const CARD_VERSION = "1.1.3";
 
 export const DEFAULT_ENTITY_NAME = "sensor.kodi_media_sensor_playlist";
 export const RESULT_ARTISTS = 1;
