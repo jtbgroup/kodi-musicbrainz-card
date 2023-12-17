@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { css, CSSResultGroup, html, LitElement, PropertyValues, TemplateResult } from "lit";
+import { css, CSSResultGroup, html, LitElement,  TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators";
-import { HomeAssistant, LovelaceCardEditor, getLovelace, hasConfigOrEntityChanged } from "custom-card-helpers";
+import { HomeAssistant, LovelaceCardEditor, getLovelace } from "custom-card-helpers";
 import { localize } from "./localize/localize";
-import Sortable from "sortablejs";
+// import Sortable from "sortablejs";
 // import { loadSortable } from "./sortable.ondemand";
-import type { SortableEvent } from "sortablejs";
+// import type { SortableEvent } from "sortablejs";
 
 import "./editor";
 import type { KodiMusicBrainzCardConfig } from "./types";
-import { CARD_VERSION, DEFAULT_ENTITY_NAME, RESULT_ARTISTS, RESULT_RELEASEGROUPS } from "./const";
+import { CARD_VERSION, DEFAULT_ENTITY_NAME} from "./const";
 
 console.info(
     `%c  KODI-MUSICBRAINZ-CARD\n%c  ${localize("common.version")} ${CARD_VERSION}    `,
@@ -43,7 +43,8 @@ export class KodiMusicBrainzCard extends LitElement {
     private _card;
     private _searchInput;
     private _artS;
-    private firstRun = true;
+    private _firstRun = true;
+    private _runCounter = 0;
 
     // TODO Add any properities that should cause your element to re-render here
     // https://lit.dev/docs/components/properties/
@@ -71,8 +72,12 @@ export class KodiMusicBrainzCard extends LitElement {
     // https://lit.dev/docs/components/rendering/
     protected render(): TemplateResult | void {
         let errorMessage;
+        let searchTxt = null;
+        if( this._searchInput ){
+            searchTxt= this._searchInput.value;
+        }
 
-        if (this.firstRun) {
+        if (this._firstRun) {
             this._card = html`
                 <ha-card
                     .header=${this.config.title ? this.config.title : ""}
@@ -82,8 +87,12 @@ export class KodiMusicBrainzCard extends LitElement {
                 </ha-card>
             `;
         }
+        
+        if( searchTxt ){
+            this._searchInput.value = searchTxt;
+        }
 
-        if (this.config.entity && !this.firstRun) {
+        if (this.config.entity && !this._firstRun) {
             this.fillEntityArtist(this.config.entity);
         }
 
@@ -254,7 +263,7 @@ export class KodiMusicBrainzCard extends LitElement {
     }
 
     private getCover(item) {
-        if (item["releases"][0]) {
+        if (item["releases"] != undefined && item["releases"][0]) {
             const releaseId = item["releases"][0]["id"];
 
             let url = "https://coverartarchive.org/release/" + releaseId;
@@ -485,7 +494,7 @@ export class KodiMusicBrainzCard extends LitElement {
                 grid-template-rows: auto;
             }
             .mb_rg_detail_title {
-                grid-column: 2 / 4;
+                grid-column: 2 / 3;
                 grid-row: 1;
                 font-weight: bold;
             }
