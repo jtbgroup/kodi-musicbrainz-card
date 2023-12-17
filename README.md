@@ -39,7 +39,7 @@ Manual installation is of course possible, but not explained here as there are p
 
 Example
 
-``` yaml
+```yaml
     type: custom:kodi-playlist-card
     entity: media_player.kodi_example
-``
+```
