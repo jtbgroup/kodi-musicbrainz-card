@@ -12,9 +12,10 @@ export interface KodiMusicBrainzCardConfig extends LovelaceCardConfig {
     entity?: string;
     title?: string;
     show_version: boolean;
-    filter_secondType_live: boolean;
-    filter_secondType_soundtrack: boolean;
-    filter_secondType_compilation: boolean;
-    filter_secondType_remix: boolean;
+    filter_primaryType_single: boolean;
+    filter_primaryType_album: boolean;
+    filter_secondaryType_soundtrack: boolean;
+    filter_secondaryType_compilation: boolean;
+    filter_secondaryType_remix: boolean;
 }
 

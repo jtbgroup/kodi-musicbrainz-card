@@ -38,14 +38,10 @@ export class KodiMusicBrainzCard extends LitElement {
         };
     }
 
-    private _entityState;
-    private _json_meta;
-    private _entity;
     private _card;
     private _searchInput;
     private _mediaPlayerInput;
     private _alreadyRunned = false;
-    private _runCounter = 0;
     @state() private config!: KodiMusicBrainzCardConfig;
 
     // TODO Add any properities that should cause your element to re-render here
@@ -135,16 +131,19 @@ export class KodiMusicBrainzCard extends LitElement {
     }
 
     private _buildCardContainer() {
-        const _filter_live_el = this.createFilterEl("filter_live", this.config.filter_secondType_live);
+        const _filter_prim_single_el = this.createFilterEl("filter_primary_single", this.config.filter_primaryType_single);
+        const _filter_prim_album_el = this.createFilterEl("filter_primary_album", this.config.filter_primaryType_album);
+        
+        const _filter_live_el = this.createFilterEl("filter_secondary_live", this.config.filter_secondType_live);
         const _filter_compilation_el = this.createFilterEl(
-            "filter_compilation",
-            this.config.filter_secondType_compilation,
+            "filter_secondary_compilation",
+            this.config.filter_secondaryType_compilation,
         );
         const _filter_soundtrack_el = this.createFilterEl(
-            "filter_soundtrack",
-            this.config.filter_secondType_soundtrack,
+            "filter_secondary_soundtrack",
+            this.config.filter_secondaryType_soundtrack,
         );
-        const _filter_remix_el = this.createFilterEl("filter_remix", this.config.filter_secondType_remix);
+        const _filter_remix_el = this.createFilterEl("filter_secondary_remix", this.config.filter_secondaryType_remix);
 
         this._searchInput = document.createElement("ha-textfield");
         this._searchInput.setAttribute("outlined", "");
@@ -176,7 +175,11 @@ export class KodiMusicBrainzCard extends LitElement {
                             @click="${this._clearResultList}"
                             }></mwc-button>
                     </div>
-                    <div class="mb_form_filters">
+                    <div class="mb_form_filters_primary">
+                        <div class="mb_form_filter">${_filter_prim_album_el}<mwc-label>Album</mwc-label></div>
+                        <div class="mb_form_filter">${_filter_prim_single_el}<mwc-label>Single</mwc-label></div>
+                    </div>
+                    <div class="mb_form_filters_secondary">
                         <div class="mb_form_filter">${_filter_live_el}<mwc-label>Live</mwc-label></div>
                         <div class="mb_form_filter">${_filter_compilation_el}<mwc-label>Compilation</mwc-label></div>
                         <div class="mb_form_filter">${_filter_remix_el}<mwc-label>Remix</mwc-label></div>
@@ -256,59 +259,42 @@ export class KodiMusicBrainzCard extends LitElement {
             resultDiv.append(primaryTypesDiv);
 
             this._filterTypes(a, item).map(res => {
-                let secondaryType = res["secondary-types"] ? res["secondary-types"] : "";
-                secondaryType = secondaryType.toString();
-                let addItem = true;
-                if (secondaryType.toLowerCase().includes("live") && !this.isFilterLiveSelected()) {
-                    addItem = false;
-                } else if (secondaryType.toLowerCase().includes("compilation") && !this.isFilterCompilationSelected()) {
-                    addItem = false;
-                } else if (secondaryType.toLowerCase().includes("remix") && !this.isFilterRemixSelected()) {
-                    addItem = false;
-                } else if (secondaryType.toLowerCase().includes("soundtrack") && !this.isFilterSoundtrackSelected()) {
-                    addItem = false;
-                } else if (secondaryType.toLowerCase().includes("album") || secondaryType == "") {
-                    addItem = true;
-                }
+                const titleDiv = document.createElement("div");
+                titleDiv.className = "mb_rg_detail_title";
+                titleDiv.innerHTML = res["title"];
 
-                if (addItem) {
-                    const titleDiv = document.createElement("div");
-                    titleDiv.className = "mb_rg_detail_title";
-                    titleDiv.innerHTML = res["title"];
+                const releaseIcon = document.createElement("ha-icon");
+                releaseIcon.setAttribute("icon", "mdi:calendar");
+                const releaseDiv = document.createElement("div");
+                releaseDiv.className = "mb_rg_detail_release";
+                releaseDiv.append(releaseIcon);
+                releaseDiv.innerHTML = res["first-release-date"] ? res["first-release-date"] : "";
 
-                    const releaseIcon = document.createElement("ha-icon");
-                    releaseIcon.setAttribute("icon", "mdi:calendar");
-                    const releaseDiv = document.createElement("div");
-                    releaseDiv.className = "mb_rg_detail_release";
-                    releaseDiv.append(releaseIcon);
-                    releaseDiv.innerHTML = res["first-release-date"] ? res["first-release-date"] : "";
+                const detailTypesIcon = document.createElement("ha-icon");
+                detailTypesIcon.setAttribute("icon", "mdi:shape-outline");
+                const detailTypesDiv = document.createElement("div");
+                detailTypesDiv.className = "mb_rg_detail_types";
+                detailTypesDiv.append(detailTypesIcon);
+                detailTypesDiv.innerHTML = res["secondary-types"] ? res["secondary-types"] : "";
 
-                    const detailTypesIcon = document.createElement("ha-icon");
-                    detailTypesIcon.setAttribute("icon", "mdi:shape-outline");
-                    const detailTypesDiv = document.createElement("div");
-                    detailTypesDiv.className = "mb_rg_detail_types";
-                    detailTypesDiv.append(detailTypesIcon);
-                    detailTypesDiv.innerHTML = res["secondary-types"] ? res["secondary-types"] : "";
+                const imgCoverIcon = document.createElement("ha-icon");
+                imgCoverIcon.id = "covericon_" + res["id"];
+                imgCoverIcon.setAttribute("icon", "mdi:disc");
+                const coverDiv = document.createElement("div");
+                coverDiv.id = "coverdiv_" + res["id"];
+                coverDiv.className = "mb_rg_detail_cover";
+                coverDiv.append(imgCoverIcon);
 
-                    const imgCoverIcon = document.createElement("ha-icon");
-                    imgCoverIcon.id = "covericon_" + res["id"];
-                    imgCoverIcon.setAttribute("icon", "mdi:disc");
-                    const coverDiv = document.createElement("div");
-                    coverDiv.id = "coverdiv_" + res["id"];
-                    coverDiv.className = "mb_rg_detail_cover";
-                    coverDiv.append(imgCoverIcon);
+                this.getCover(res);
 
-                    this.getCover(res);
+                const detailGrid = document.createElement("div");
+                detailGrid.className = "mb_rg_grid_detail";
+                detailGrid.append(titleDiv);
+                detailGrid.append(releaseDiv);
+                detailGrid.append(detailTypesDiv);
+                detailGrid.append(coverDiv);
 
-                    const detailGrid = document.createElement("div");
-                    detailGrid.className = "mb_rg_grid_detail";
-                    detailGrid.append(titleDiv);
-                    detailGrid.append(releaseDiv);
-                    detailGrid.append(detailTypesDiv);
-                    detailGrid.append(coverDiv);
-
-                    containerDiv.append(detailGrid);
-                }
+                containerDiv.append(detailGrid);
             });
         });
 
@@ -414,23 +400,34 @@ export class KodiMusicBrainzCard extends LitElement {
             });
     }
 
-    private isFilterLiveSelected() {
-        const a = this.shadowRoot?.querySelector("#filter_live") as Checkbox;
+    private isFilterPrimaryAlbumSelected() {
+        const a = this.shadowRoot?.querySelector("#filter_primary_album") as Checkbox;
         return a.checked;
     }
 
-    private isFilterCompilationSelected() {
-        const a = this.shadowRoot?.querySelector("#filter_compilation") as Checkbox;
+    private isFilterPrimarySingleSelected() {
+        const a = this.shadowRoot?.querySelector("#filter_primary_single") as Checkbox;
         return a.checked;
     }
 
-    private isFilterRemixSelected() {
-        const a = this.shadowRoot?.querySelector("#filter_remix") as Checkbox;
+    
+    private isFilterSecondaryLiveSelected() {
+        const a = this.shadowRoot?.querySelector("#filter_secondary_live") as Checkbox;
         return a.checked;
     }
 
-    private isFilterSoundtrackSelected() {
-        const a = this.shadowRoot?.querySelector("#filter_soundtrack") as Checkbox;
+    private isFilterSecondaryCompilationSelected() {
+        const a = this.shadowRoot?.querySelector("#filter_secondary_compilation") as Checkbox;
+        return a.checked;
+    }
+
+    private isFilterSecondaryRemixSelected() {
+        const a = this.shadowRoot?.querySelector("#filter_secondary_remix") as Checkbox;
+        return a.checked;
+    }
+
+    private isFilterSecondarySoundtrackSelected() {
+        const a = this.shadowRoot?.querySelector("#filter_secondary_soundtrack") as Checkbox;
         return a.checked;
     }
 
@@ -457,10 +454,21 @@ export class KodiMusicBrainzCard extends LitElement {
     }
 
     private searchReleaseGroups(artistId) {
+        let typeFilter = !this.isFilterPrimaryAlbumSelected() ? " AND NOT primarytype:Album" : "";
+        typeFilter += !this.isFilterPrimarySingleSelected() ? " AND NOT primarytype:Single" : "";
+        typeFilter += !this.isFilterSecondaryLiveSelected() ? " AND NOT secondarytype:Live" : "";
+        typeFilter += !this.isFilterSecondaryCompilationSelected() ? " AND NOT secondarytype:Compilation" : "";
+        typeFilter += !this.isFilterSecondaryRemixSelected() ? " AND NOT secondarytype:Remix" : "";
+        typeFilter += !this.isFilterSecondarySoundtrackSelected() ? " AND NOT secondarytype:Soundtrack" : "";
+
         const urlSingles =
-            "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" + artistId;
+            "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:single AND arid:" +
+            artistId +
+            typeFilter;
         const urlAlbums =
-            "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:album AND arid:" + artistId;
+            "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=primarytype:album AND arid:" +
+            artistId +
+            typeFilter;
 
         Promise.all([fetch(encodeURI(urlSingles)), fetch(encodeURI(urlAlbums))])
             .then(function (responses) {
@@ -626,9 +634,16 @@ export class KodiMusicBrainzCard extends LitElement {
                 align-items: center;
             }
 
-            .mb_form_filters {
+            .mb_form_filters_primary {
                 grid-column: 1 / 3;
                 grid-row: 2;
+                display: flex;
+                gap: 3px;
+            }
+
+            .mb_form_filters_secondary {
+                grid-column: 1 / 3;
+                grid-row: 3;
                 display: flex;
                 gap: 3px;
             }
