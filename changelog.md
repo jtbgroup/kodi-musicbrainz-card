@@ -2,7 +2,7 @@
 
 ## 1.2.0
 
-- filters for the album types
+- filters for the album types applied before the query (primary and secondary types)
 
 ## 1.1.4
 
