@@ -36,6 +36,18 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
     get _show_version(): boolean {
         return this._config?.show_version || false;
     }
+    get _filter_secondType_live(): boolean {
+        return this._config?.filter_secondType_live || false;
+    }
+    get _filter_secondType_compilation(): boolean {
+        return this._config?.filter_secondType_compilation || false;
+    }
+    get _filter_secondType_remix(): boolean {
+        return this._config?.filter_secondType_remix || false;
+    }
+    get _filter_secondType_soundtrack(): boolean {
+        return this._config?.filter_secondType_soundtrack || false;
+    }
 
     protected render(): TemplateResult | void {
         if (!this.hass || !this._helpers) {
@@ -76,6 +88,38 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
                         <ha-switch
                             .checked=${this._show_version !== false}
                             .configValue=${"show_version"}
+                            @change=${this._valueChanged}></ha-switch>
+                    </ha-formfield>
+                </div>
+                <div class="config">
+                    <ha-formfield class="switch-wrapper" label="Inclue Live releases">
+                        <ha-switch
+                            .checked=${this._filter_secondType_live !== false}
+                            .configValue=${"filter_secondType_live"}
+                            @change=${this._valueChanged}></ha-switch>
+                    </ha-formfield>
+                </div>
+                <div class="config">
+                    <ha-formfield class="switch-wrapper" label="Inclue Compilation releases">
+                        <ha-switch
+                            .checked=${this._filter_secondType_compilation !== false}
+                            .configValue=${"filter_secondType_compilation"}
+                            @change=${this._valueChanged}></ha-switch>
+                    </ha-formfield>
+                </div>
+                <div class="config">
+                    <ha-formfield class="switch-wrapper" label="Inclue Remix releases">
+                        <ha-switch
+                            .checked=${this._filter_secondType_remix !== false}
+                            .configValue=${"filter_secondType_Remix"}
+                            @change=${this._valueChanged}></ha-switch>
+                    </ha-formfield>
+                </div>
+                <div class="config">
+                    <ha-formfield class="switch-wrapper" label="Inclue Soundtrack releases">
+                        <ha-switch
+                            .checked=${this._filter_secondType_soundtrack !== false}
+                            .configValue=${"filter_secondType_soundtrack"}
                             @change=${this._valueChanged}></ha-switch>
                     </ha-formfield>
                 </div>

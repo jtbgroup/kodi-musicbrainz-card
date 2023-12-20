@@ -125,7 +125,27 @@ export class KodiMusicBrainzCard extends LitElement {
         }
     }
 
+    private createFilterEl(id, configCheck) {
+        const el = document.createElement("mwc-checkbox");
+        el.setAttribute("id", id);
+        if (configCheck) {
+            el.setAttribute("checked", "");
+        }
+        return el;
+    }
+
     private _buildCardContainer() {
+        const _filter_live_el = this.createFilterEl("filter_live", this.config.filter_secondType_live);
+        const _filter_compilation_el = this.createFilterEl(
+            "filter_compilation",
+            this.config.filter_secondType_compilation,
+        );
+        const _filter_soundtrack_el = this.createFilterEl(
+            "filter_soundtrack",
+            this.config.filter_secondType_soundtrack,
+        );
+        const _filter_remix_el = this.createFilterEl("filter_remix", this.config.filter_secondType_remix);
+
         this._searchInput = document.createElement("ha-textfield");
         this._searchInput.setAttribute("outlined", "");
         this._searchInput.setAttribute("label", "Search criteria");
@@ -157,18 +177,10 @@ export class KodiMusicBrainzCard extends LitElement {
                             }></mwc-button>
                     </div>
                     <div class="mb_form_filters">
-                        <div class="mb_form_filter">
-                            <mwc-checkbox id="filter_live" checked></mwc-checkbox><mwc-label>Live</mwc-label>
-                        </div>
-                        <div class="mb_form_filter">
-                            <mwc-checkbox id="filter_compilation" checked></mwc-checkbox><mwc-label>Compilation</mwc-label>
-                        </div>
-                        <div class="mb_form_filter">
-                            <mwc-checkbox id="filter_remix" checked></mwc-checkbox><mwc-label>Remix</mwc-label>
-                        </div>
-                        <div class="mb_form_filter">
-                            <mwc-checkbox id="filter_soundtrack" checked></mwc-checkbox><mwc-label>Soundtrack</mwc-label>
-                        </div>
+                        <div class="mb_form_filter">${_filter_live_el}<mwc-label>Live</mwc-label></div>
+                        <div class="mb_form_filter">${_filter_compilation_el}<mwc-label>Compilation</mwc-label></div>
+                        <div class="mb_form_filter">${_filter_remix_el}<mwc-label>Remix</mwc-label></div>
+                        <div class="mb_form_filter">${_filter_soundtrack_el}<mwc-label>Soundtrack</mwc-label></div>
                     </div>
                 </div>
                 <div id="result-musicbrainz"></div>
