@@ -3,6 +3,8 @@ import { css, CSSResultGroup, html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators";
 import { fireEvent, HomeAssistant, LovelaceCardEditor } from "custom-card-helpers";
 
+import { PRIMARYY_TYPES, SECONDARY_TYPES } from "./const";
+
 import { KodiMusicBrainzCardConfig } from "./types";
 
 @customElement("kodi-musicbrainz-card-editor")
@@ -36,28 +38,13 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
     get _show_version(): boolean {
         return this._config?.show_version || false;
     }
-    
+
     get _filter_primaryType_album(): boolean {
         return this._config?.filter_primaryType_album || false;
     }
     get _filter_primaryType_single(): boolean {
         return this._config?.filter_primaryType_single || false;
     }
-
-    get _filter_secondaryType_live(): boolean {
-        return this._config?.filter_secondType_live || false;
-    }
-    get _filter_secondaryType_compilation(): boolean {
-        return this._config?.filter_secondaryType_compilation || false;
-    }
-    get _filter_secondaryType_remix(): boolean {
-        return this._config?.filter_secondaryType_remix || false;
-    }
-    get _filter_secondaryType_soundtrack(): boolean {
-        return this._config?.filter_secondaryType_soundtrack || false;
-    }
-
-
 
     protected render(): TemplateResult | void {
         if (!this.hass || !this._helpers) {
@@ -102,57 +89,41 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
                     </ha-formfield>
                 </div>
 
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Include Albums">
-                        <ha-switch
-                            .checked=${this._filter_primaryType_album!== false}
-                            .configValue=${"filter_primaryType_album"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Include Single">
-                        <ha-switch
-                            .checked=${this._filter_primaryType_single !== false}
-                            .configValue=${"filter_primaryType_single"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Include Live releases">
-                        <ha-switch
-                            .checked=${this._filter_secondaryType_live !== false}
-                            .configValue=${"filter_secondaryType_live"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Include Compilation releases">
-                        <ha-switch
-                            .checked=${this._filter_secondaryType_compilation !== false}
-                            .configValue=${"filter_secondaryType_compilation"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Include Remix releases">
-                        <ha-switch
-                            .checked=${this._filter_secondaryType_remix !== false}
-                            .configValue=${"filter_secondaryType_Remix"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
-                <div class="config">
-                    <ha-formfield class="switch-wrapper" label="Include Soundtrack releases">
-                        <ha-switch
-                            .checked=${this._filter_secondaryType_soundtrack !== false}
-                            .configValue=${"filter_secondaryType_soundtrack"}
-                            @change=${this._valueChanged}></ha-switch>
-                    </ha-formfield>
-                </div>
+                ${this.createPrimaryTypesEl()}
+                ${this.createSecondaryTypesEl()}
             </div>
         `;
+    }
+
+    private createTypeEl(typeValue){
+        const selected = this._config?.[typeValue.id];
+            selected == undefined ? false : selected;
+
+        return html`<div class="config">
+                <ha-formfield class="switch-wrapper" label="${typeValue.editor_label}"
+                    ><ha-switch
+                        .checked="${selected}"
+                        @change=${this._valueChanged}
+                        .configValue="${typeValue.id}"></ha-switch
+                ></ha-formfield>
+            </div>`
+    }
+
+    private createSecondaryTypesEl() {
+        const itemTemplates: TemplateResult[] = [];
+        for (const key of Object.keys(SECONDARY_TYPES)) {
+            itemTemplates.push(this.createTypeEl(SECONDARY_TYPES[key]));
+        }
+        return itemTemplates;
+    }
+
+
+    private createPrimaryTypesEl() {
+        const itemTemplates: TemplateResult[] = [];
+        for (const key of Object.keys(PRIMARYY_TYPES)) {
+            itemTemplates.push(this.createTypeEl(PRIMARYY_TYPES[key]));
+        }
+        return itemTemplates;
     }
 
     private _initialize(): void {
@@ -167,6 +138,7 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
     }
 
     private _valueChanged(ev): void {
+        console.debug(this._config);
         if (!this._config || !this.hass) {
             return;
         }
