@@ -3,6 +3,8 @@ import { css, CSSResultGroup, html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators";
 import { fireEvent, HomeAssistant, LovelaceCardEditor } from "custom-card-helpers";
 
+import { PRIMARYY_TYPES, SECONDARY_TYPES } from "./const";
+
 import { KodiMusicBrainzCardConfig } from "./types";
 
 @customElement("kodi-musicbrainz-card-editor")
@@ -35,6 +37,13 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
 
     get _show_version(): boolean {
         return this._config?.show_version || false;
+    }
+
+    get _filter_primaryType_album(): boolean {
+        return this._config?.filter_primaryType_album || false;
+    }
+    get _filter_primaryType_single(): boolean {
+        return this._config?.filter_primaryType_single || false;
     }
 
     protected render(): TemplateResult | void {
@@ -79,8 +88,42 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
                             @change=${this._valueChanged}></ha-switch>
                     </ha-formfield>
                 </div>
+
+                ${this.createPrimaryTypesEl()}
+                ${this.createSecondaryTypesEl()}
             </div>
         `;
+    }
+
+    private createTypeEl(typeValue){
+        const selected = this._config?.[typeValue.id];
+            selected == undefined ? false : selected;
+
+        return html`<div class="config">
+                <ha-formfield class="switch-wrapper" label="${typeValue.editor_label}"
+                    ><ha-switch
+                        .checked="${selected}"
+                        @change=${this._valueChanged}
+                        .configValue="${typeValue.id}"></ha-switch
+                ></ha-formfield>
+            </div>`
+    }
+
+    private createSecondaryTypesEl() {
+        const itemTemplates: TemplateResult[] = [];
+        for (const key of Object.keys(SECONDARY_TYPES)) {
+            itemTemplates.push(this.createTypeEl(SECONDARY_TYPES[key]));
+        }
+        return itemTemplates;
+    }
+
+
+    private createPrimaryTypesEl() {
+        const itemTemplates: TemplateResult[] = [];
+        for (const key of Object.keys(PRIMARYY_TYPES)) {
+            itemTemplates.push(this.createTypeEl(PRIMARYY_TYPES[key]));
+        }
+        return itemTemplates;
     }
 
     private _initialize(): void {
@@ -95,6 +138,7 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
     }
 
     private _valueChanged(ev): void {
+        console.debug(this._config);
         if (!this._config || !this.hass) {
             return;
         }

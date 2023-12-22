@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+- filters for the album types applied before the query (primary and secondary types)
+
+## 1.1.4
+
+- Code cleanup
+- Handle some errors
+
 ## 1.1.3
 
 - bug in the layout
