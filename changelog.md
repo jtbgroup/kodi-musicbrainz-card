@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- bug fixed in the editor
+
 ## 1.2.0
 
 - filters for the album types applied before the query (primary and secondary types)
