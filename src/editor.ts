@@ -46,6 +46,38 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
         return this._config?.filter_primaryType_single || false;
     }
 
+    get _filter_primaryType_broadcast(): boolean {
+        return this._config?.filter_primaryType_broadcast || false;
+    }
+    get _filter_primaryType_ep(): boolean {
+        return this._config?.filter_primaryType_ep || false;
+    }
+    get _filter_primaryType_other(): boolean {
+        return this._config?.filter_primaryType_other || false;
+    }
+
+    get _filter_secondaryType_compilation(): boolean {
+        return this._config?.filter_secondaryType_compilation || false;
+    }
+    get _filter_secondaryType_demo(): boolean {
+        return this._config?.filter_secondaryType_demo || false;
+    }
+    get _filter_secondaryType_djmix(): boolean {
+        return this._config?.filter_secondaryType_djmix || false;
+    }
+    get _filter_secondaryType_live(): boolean {
+        return this._config?.filter_secondaryType_live || false;
+    }
+    get _filter_secondaryType_remix(): boolean {
+        return this._config?.filter_secondaryType_remix || false;
+    }
+    get _filter_secondaryType_soundtrack(): boolean {
+        return this._config?.filter_secondaryType_soundtrack || false;
+    }
+
+
+
+
     protected render(): TemplateResult | void {
         if (!this.hass || !this._helpers) {
             return html``;
