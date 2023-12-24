@@ -10,7 +10,7 @@ import { localize } from "./localize/localize";
 import "./editor";
 import type { KodiMusicBrainzCardConfig } from "./types";
 import { CARD_VERSION, DEFAULT_ENTITY_NAME, PRIMARYY_TYPES, SECONDARY_TYPES } from "./const";
-import { Checkbox } from "@material/mwc-checkbox";
+// import { Checkbox } from "@material/mwc-checkbox";
 
 console.info(
     `%c  KODI-MUSICBRAINZ-CARD\n%c  ${localize("common.version")} ${CARD_VERSION}    `,
@@ -42,6 +42,8 @@ export class KodiMusicBrainzCard extends LitElement {
     private _searchInput;
     private _mediaPlayerInput;
     private _alreadyRunned = false;
+    private _lastArtistSearched = null;
+    private filters = new Map<string, boolean>();
     @state() private config!: KodiMusicBrainzCardConfig;
 
     // TODO Add any properities that should cause your element to re-render here
@@ -60,6 +62,15 @@ export class KodiMusicBrainzCard extends LitElement {
 
         this.config = config;
         this._alreadyRunned = false;
+
+        for (const key in PRIMARYY_TYPES) {
+            const id = PRIMARYY_TYPES[key].id;
+            this.filters.set(id, this.config[id] ? this.config[id] : false);
+        }
+        for (const key in SECONDARY_TYPES) {
+            const id = SECONDARY_TYPES[key].id;
+            this.filters.set(id, this.config[id] ? this.config[id] : false);
+        }
     }
 
     public getCardSize(): number {
@@ -89,7 +100,7 @@ export class KodiMusicBrainzCard extends LitElement {
                     .header=${this.config.title ? this.config.title : ""}
                     tabindex="0"
                     .label=${`Kodi MusicBrainz ${this.config.entity || "No Entity Defined"}`}>
-                    <div class="card-container">${errorMessage ? errorMessage : this._buildCardContainer()}</div>
+                    <div class="card-container">${errorMessage ? errorMessage : this.buildCardContainer()}</div>
                 </ha-card>
             `;
             this._alreadyRunned = true;
@@ -121,27 +132,21 @@ export class KodiMusicBrainzCard extends LitElement {
         }
     }
 
-    private _buildCardContainer() {
-        // const _filter_prim_single_el = this.createFilterEl(
-        //     "filter_primary_single",
-        //     this.config.filter_primaryType_single,
-        // );
-        // const _filter_prim_album_el = this.createFilterEl("filter_primary_album", this.config.filter_primaryType_album);
-
+    private buildCardContainer() {
         this._searchInput = document.createElement("ha-textfield");
         this._searchInput.setAttribute("outlined", "");
         this._searchInput.setAttribute("label", "Search criteria");
         this._searchInput.setAttribute("class", "form-button");
         this._searchInput.addEventListener("keydown", event => {
             if (event.code === "Enter") {
-                this._searchFromInput();
+                this.searchFromInput();
             }
         });
 
         return html`
             <div class="mb_content_container">
                 ${this.config.show_version ? html`<div>${CARD_VERSION}</div>` : ""}
-                ${this.config.entity ? this._createMediaPlayerElements() : html``}
+                ${this.config.entity ? this.createMediaPlayerElements() : html``}
                 <div class="mb_form_grid">
                     ${this._searchInput}
                     <div class="mb_button_grid">
@@ -149,13 +154,13 @@ export class KodiMusicBrainzCard extends LitElement {
                             class="form-button"
                             label="Search"
                             raised
-                            @click="${this._searchFromInput}"
+                            @click="${this.searchFromInputButton}"
                             }></mwc-button>
                         <mwc-button
                             class="form-button"
                             label="Clear"
                             raised
-                            @click="${this._clearResultList}"
+                            @click="${this.clearResultListButton}"
                             }></mwc-button>
                     </div>
                     <div class="mb_form_filters">
@@ -169,18 +174,29 @@ export class KodiMusicBrainzCard extends LitElement {
             </div>
         `;
     }
-
-    private createTypeEl(key, typeValue) {
-        let selected = this.config[typeValue.id];
+    private clearResultListButton() {
+        this.clearResultList();
+        this._searchInput.value = "";
+        this._lastArtistSearched = null;
+    }
+    private searchFromInputButton() {
+        this._lastArtistSearched = null;
+        this.searchFromInput();
+    }
+    private createTypeEl(type) {
+        let selected = this.filters.get(type.id);
         selected = selected == undefined ? false : selected;
+
         return html`<div class="mb_form_filter_type">
-            <mwc-checkbox id="${typeValue.id}" .checked=${selected}></mwc-checkbox><mwc-label>${key}</mwc-label>
+            <ha-formfield class="switch-wrapper" label="${type.mb_query}"
+                ><ha-switch id=${type.id} @change=${this.filterChanged} .checked=${selected}> </ha-switch
+            ></ha-formfield>
         </div>`;
     }
     private createPrimaryTypesEl() {
         const itemTemplates: TemplateResult[] = [];
         for (const key of Object.keys(PRIMARYY_TYPES)) {
-            itemTemplates.push(this.createTypeEl(key, PRIMARYY_TYPES[key]));
+            itemTemplates.push(this.createTypeEl(PRIMARYY_TYPES[key]));
         }
         return itemTemplates;
     }
@@ -188,21 +204,19 @@ export class KodiMusicBrainzCard extends LitElement {
     private createSecondaryTypesEl() {
         const itemTemplates: TemplateResult[] = [];
         for (const key of Object.keys(SECONDARY_TYPES)) {
-            itemTemplates.push(this.createTypeEl(key, SECONDARY_TYPES[key]));
+            itemTemplates.push(this.createTypeEl(SECONDARY_TYPES[key]));
         }
         return itemTemplates;
     }
 
-    private createFilterEl(id, configCheck) {
-        const el = document.createElement("mwc-checkbox");
-        el.setAttribute("id", id);
-        if (configCheck) {
-            el.setAttribute("checked", "");
+    private filterChanged(ev) {
+        this.filters.set(ev.target.id, ev.target.checked);
+        if (this._lastArtistSearched != null) {
+            this.searchReleaseGroups(this._lastArtistSearched);
         }
-        return el;
     }
 
-    private _createMediaPlayerElements() {
+    private createMediaPlayerElements() {
         const entity = this.config.entity;
         let entityState;
 
@@ -216,12 +230,7 @@ export class KodiMusicBrainzCard extends LitElement {
         searchBtn.className = "form-button";
         searchBtn.setAttribute("raised", "");
         searchBtn.setAttribute("Label", "search");
-        // searchBtn.addEventListener("click", event => {
-        //     // console.debug(event.target);
-        //     this._searchWithEntity();
-        // });
-
-        searchBtn.addEventListener("click", this._searchFromMediaPlayer.bind(this));
+        searchBtn.addEventListener("click", this.searchFromMediaPlayer.bind(this));
 
         if (entity) {
             entityState = this.hass.states[entity];
@@ -238,7 +247,7 @@ export class KodiMusicBrainzCard extends LitElement {
         return html`<div class="mb_entity_control">${this._mediaPlayerInput}${searchBtn}</div>`;
     }
 
-    private _createReleaseGroupsList(releaseGroups) {
+    private createReleaseGroupsList(releaseGroups) {
         const a = releaseGroups.sort(function (a, b) {
             const type = a["primary-type"].localeCompare(b["primary-type"]);
             if (type != 0) return type;
@@ -269,7 +278,7 @@ export class KodiMusicBrainzCard extends LitElement {
 
             resultDiv.append(primaryTypesDiv);
 
-            this._filterTypes(a, item).map(res => {
+            this.filterByTypes(a, item).map(res => {
                 const titleDiv = document.createElement("div");
                 titleDiv.className = "mb_rg_detail_title";
                 titleDiv.innerHTML = res["title"];
@@ -343,7 +352,7 @@ export class KodiMusicBrainzCard extends LitElement {
         }
     }
 
-    private _filterTypes(json, value) {
+    private filterByTypes(json, value) {
         const result = json.filter(item => {
             return item["primary-type"] == value;
         });
@@ -351,7 +360,7 @@ export class KodiMusicBrainzCard extends LitElement {
         return result;
     }
 
-    private _createArtistsList(artists) {
+    private createArtistsList(artists) {
         const artistsDiv = document.createElement("div");
         artistsDiv.id = "result";
         artistsDiv.className = "mb_results";
@@ -361,7 +370,7 @@ export class KodiMusicBrainzCard extends LitElement {
             artistBtn.className = "mb_artist_btn";
 
             const btn = document.createElement("ha-icon");
-            btn.setAttribute("icon", "mdi:disc");
+            btn.setAttribute("icon", "mdi:account");
             btn.addEventListener("click", () => this.searchReleaseGroups(item["id"]));
             artistBtn.append(btn);
 
@@ -393,17 +402,16 @@ export class KodiMusicBrainzCard extends LitElement {
         return artistsDiv;
     }
 
-    private _searchFromMediaPlayer() {
+    private searchFromMediaPlayer() {
         this._searchInput.value = this._mediaPlayerInput.value;
-        this._searchFromInput();
+        this.searchFromInput();
     }
 
-    private _searchFromInput() {
+    private searchFromInput() {
         const searchText = this._searchInput.value;
 
         let url = "https://musicbrainz.org/ws/2/artist/?fmt=json&query=artist:" + searchText;
         url = encodeURI(url);
-
         fetch(url)
             .then(response => response.json())
             .then(data => {
@@ -415,7 +423,7 @@ export class KodiMusicBrainzCard extends LitElement {
         return this.shadowRoot?.querySelector("#result-musicbrainz") as HTMLElement;
     }
 
-    private _clearResultList() {
+    private clearResultList() {
         const divMB = this.getResultElement();
         const divresult = this.shadowRoot?.querySelector("#result") as HTMLElement;
         if (divresult) {
@@ -424,26 +432,28 @@ export class KodiMusicBrainzCard extends LitElement {
     }
 
     private fillArtistsList(artists) {
-        this._clearResultList();
-        this.getResultElement().append(this._createArtistsList(artists));
+        this.clearResultList();
+        this.getResultElement().append(this.createArtistsList(artists));
     }
 
     private fillReleaseGroupsList(resultGroups) {
-        this._clearResultList();
-        this.getResultElement().append(this._createReleaseGroupsList(resultGroups));
+        this.clearResultList();
+        this.getResultElement().append(this.createReleaseGroupsList(resultGroups));
     }
 
     private searchReleaseGroups(artistId) {
+        console.debug(artistId);
+        this._lastArtistSearched = artistId;
         let typeFilter = "";
         for (const key of Object.keys(SECONDARY_TYPES)) {
-            const typeSelected = this.shadowRoot?.querySelector("#" + SECONDARY_TYPES[key].id) as Checkbox;
-            typeFilter += typeSelected.checked ? "" : " AND NOT secondarytype:" + SECONDARY_TYPES[key].mb_query;
+            typeFilter += this.filters.get(SECONDARY_TYPES[key].id)
+                ? ""
+                : " AND NOT secondarytype:" + SECONDARY_TYPES[key].mb_query;
         }
 
         const queryURL: string[] = [];
         for (const key of Object.keys(PRIMARYY_TYPES)) {
-            const typeSelected = this.shadowRoot?.querySelector("#" + PRIMARYY_TYPES[key].id) as Checkbox;
-            if (typeSelected.checked) {
+            if (this.filters.get(PRIMARYY_TYPES[key].id)) {
                 queryURL.push(
                     "https://musicbrainz.org/ws/2/release-group/?fmt=json&query=arid:" +
                         artistId +
@@ -454,7 +464,6 @@ export class KodiMusicBrainzCard extends LitElement {
             }
         }
 
-        console.debug(queryURL);
         const fetched: Promise<Response>[] = [];
         for (const url of queryURL) {
             fetched.push(fetch(encodeURI(url)));
@@ -622,33 +631,30 @@ export class KodiMusicBrainzCard extends LitElement {
                 grid-template-columns: auto;
                 grid-template-rows: auto;
                 align-items: center;
-                grid-column: 1 / 3; 
+                grid-column: 1 / 3;
             }
 
-            .mb_form_filter_type{
+            .mb_form_filter_type {
                 display: grid;
                 grid-template-columns: auto auto;
                 grid-template-rows: auto;
                 align-items: center;
             }
 
-            .mb_form_filters_title_primary, .mb_form_filters_title_secondary{
+            .mb_form_filters_title_primary,
+            .mb_form_filters_title_secondary {
                 font-weight: bold;
             }
 
+            .mb_form_filters_secondary,
             .mb_form_filters_primary {
                 display: flex;
-                gap: 3px;
-            }
-
-            .mb_form_filters_secondary {
-                display: flex;
                 flex-wrap: wrap;
-                gap: 3px;
+                gap: 20px;
             }
 
-            #result-musicbrainz{
-                grid-column: 1 / 3; 
+            #result-musicbrainz {
+                grid-column: 1 / 3;
             }
         `;
     }
