@@ -442,7 +442,6 @@ export class KodiMusicBrainzCard extends LitElement {
     }
 
     private searchReleaseGroups(artistId) {
-        console.debug(artistId);
         this._lastArtistSearched = artistId;
         let typeFilter = "";
         for (const key of Object.keys(SECONDARY_TYPES)) {

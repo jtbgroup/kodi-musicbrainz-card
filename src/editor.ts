@@ -170,7 +170,6 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
     }
 
     private _valueChanged(ev): void {
-        console.debug(this._config);
         if (!this._config || !this.hass) {
             return;
         }
