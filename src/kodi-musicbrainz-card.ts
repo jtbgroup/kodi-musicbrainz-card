@@ -163,12 +163,24 @@ export class KodiMusicBrainzCard extends LitElement {
                             @click="${this.clearResultListButton}"
                             }></mwc-button>
                     </div>
-                    <div class="mb_form_filters">
-                        <div class="mb_form_filters_title_primary">Primary Type</div>
-                        <div class="mb_form_filters_primary">${this.createPrimaryTypesEl()}</div>
-                        <div class="mb_form_filters_title_secondary">Secondary Type</div>
-                        <div class="mb_form_filters_secondary">${this.createSecondaryTypesEl()}</div>
-                    </div>
+
+                    ${!this.config.show_filter_primaryType
+                        ? ""
+                        : html`
+                              <div class="mb_form_filters">
+                                  <div class="mb_form_filters_title_primary">Primary Type</div>
+                                  <div class="mb_form_filters_primary">${this.createPrimaryTypesEl()}</div>
+                              </div>
+                          `}
+                    ${!this.config.show_filter_secondaryType
+                        ? ""
+                        : html`
+                              <div class="mb_form_filters">
+                                  <div class="mb_form_filters_title_secondary">Secondary Type</div>
+                                  <div class="mb_form_filters_secondary">${this.createSecondaryTypesEl()}</div>
+                              </div>
+                          `}
+
                     <div id="result-musicbrainz"></div>
                 </div>
             </div>
@@ -650,6 +662,7 @@ export class KodiMusicBrainzCard extends LitElement {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 20px;
+                margin-bottom: 20px;
             }
 
             #result-musicbrainz {

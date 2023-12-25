@@ -38,6 +38,12 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
     get _show_version(): boolean {
         return this._config?.show_version || false;
     }
+    get _show_filter_primaryType(): boolean {
+        return this._config?.show_filter_primaryType || false;
+    }
+    get _show_filter_secondaryType(): boolean {
+        return this._config?.show_filter_secondaryType || false;
+    }
 
     get _filter_primaryType_album(): boolean {
         return this._config?.filter_primaryType_album || false;
@@ -117,6 +123,23 @@ export class KodiMusicBrainzCardEditor extends LitElement implements LovelaceCar
                         <ha-switch
                             .checked=${this._show_version !== false}
                             .configValue=${"show_version"}
+                            @change=${this._valueChanged}></ha-switch>
+                    </ha-formfield>
+                </div>
+
+                <div class="config">
+                    <ha-formfield class="switch-wrapper" label="Show Primary type filter">
+                        <ha-switch
+                            .checked=${this._show_filter_primaryType !== false}
+                            .configValue=${"show_filter_primaryType"}
+                            @change=${this._valueChanged}></ha-switch>
+                    </ha-formfield>
+                </div>
+                <div class="config">
+                    <ha-formfield class="switch-wrapper" label="Show Secondary type filter">
+                        <ha-switch
+                            .checked=${this._show_filter_secondaryType !== false}
+                            .configValue=${"show_filter_secondaryType"}
                             @change=${this._valueChanged}></ha-switch>
                     </ha-formfield>
                 </div>

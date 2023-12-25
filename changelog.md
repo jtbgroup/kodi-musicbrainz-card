@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- Option to show/hide the filters for types
+
 ## 1.2.1
 
 - bug fixed in the editor
