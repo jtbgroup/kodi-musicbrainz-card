@@ -4,13 +4,9 @@ import { css, CSSResultGroup, html, LitElement, TemplateResult, PropertyValues }
 import { customElement, property, state } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardEditor, getLovelace, hasConfigOrEntityChanged } from "custom-card-helpers";
 import { localize } from "./localize/localize";
-// import Sortable from "sortablejs";
-// import { loadSortable } from "./sortable.ondemand";
-// import type { SortableEvent } from "sortablejs";
 import "./editor";
 import type { KodiMusicBrainzCardConfig } from "./types";
 import { CARD_VERSION, DEFAULT_ENTITY_NAME, PRIMARYY_TYPES, SECONDARY_TYPES } from "./const";
-// import { Checkbox } from "@material/mwc-checkbox";
 
 console.info(
     `%c  KODI-MUSICBRAINZ-CARD\n%c  ${localize("common.version")} ${CARD_VERSION}    `,

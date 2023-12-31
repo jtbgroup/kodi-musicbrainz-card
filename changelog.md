@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+- remove reference to mwc-chekbox
+
 ## 1.2.2
 
 - Option to show/hide the filters for types
