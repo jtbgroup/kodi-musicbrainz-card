@@ -1,4 +1,3 @@
-import "@material/mwc-checkbox";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { css, CSSResultGroup, html, LitElement, TemplateResult, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
