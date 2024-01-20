@@ -7,6 +7,15 @@ on:
       - develop
 
 jobs:
+  build:
+    name: Test build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build
+        run: |
+          npm install
+          npm run build
   validate_hacs:
     name: Validate HACS requirements
     runs-on: "ubuntu-latest"
