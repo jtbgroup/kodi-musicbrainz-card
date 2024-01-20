@@ -2,7 +2,7 @@
 
 ## 1.2.3 & 1.2.4
 
-- remove reference to mwc-chekbox
+- Remove reference to mwc-chekbox
 
 ## 1.2.2
 
